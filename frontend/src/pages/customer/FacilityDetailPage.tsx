@@ -1,21 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Button, Card, Form } from 'react-bootstrap';
 import Badge, { BadgeBg } from 'components/base/Badge';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faCheck,
-  faStar,
-  faMapMarkerAlt,
-  faUsers,
-  faClock,
-  faWifi,
-  faParking,
-  faUtensils,
-  faDesktop,
-  faSnowflake,
-  faCalendarAlt
-} from '@fortawesome/free-solid-svg-icons';
+  Check,
+  Star,
+  MapPin,
+  Users,
+  Clock,
+  Wifi,
+  Car,
+  Utensils,
+  Monitor,
+  Snowflake,
+  Calendar
+} from 'lucide-react';
 import { currencyFormat } from 'helpers/utils';
 import FacilityDetailLoader from 'components/facilities/FacilityDetailLoader';
 import { Facility, User } from 'types';
@@ -50,39 +48,38 @@ const FacilityImageGallery = ({
     return <Badge bg={config.bg as BadgeBg}>{config.text}</Badge>;
   };
   return (
-    <Card border="secondary" className="mb-4">
-      <Card.Body className="p-0">
-        <div className="position-relative">
-          <Card.Img
+    <div className="card mb-6">
+      <div className="p-0">
+        <div className="relative">
+          <img
             src={getResourceUrl(images[selectedImage]?.path || '')}
             alt={facility.name}
-            style={{ height: '400px', objectFit: 'cover' }}
+            className="w-full h-96 object-cover rounded-t-lg"
           />
-          <div className="position-absolute top-0 start-0 p-3">
+          <div className="absolute top-0 left-0 p-3">
             {getStatusBadge(facility.isActive)}
           </div>
         </div>
         {images.length > 1 && (
-          <Row className="g-2 p-3">
+          <div className="grid grid-cols-4 gap-2 p-3">
             {images.map((image, index) => (
-              <Col xs={3} key={index}>
-                <Card.Img
+              <div key={index}>
+                <img
                   src={getResourceUrl(image.path)}
                   alt={`${facility.name} ${index + 1}`}
-                  className={`cursor-pointer ${
+                  className={`w-full h-20 object-cover rounded cursor-pointer transition-all ${
                     selectedImage === index
-                      ? 'border border-primary border-2'
-                      : 'border border-secondary'
+                      ? 'border-2 border-primary-500'
+                      : 'border border-gray-300 hover:border-gray-400'
                   }`}
-                  style={{ height: '80px', objectFit: 'cover' }}
                   onClick={() => setSelectedImage(index)}
                 />
-              </Col>
+              </div>
             ))}
-          </Row>
+          </div>
         )}
-      </Card.Body>
-    </Card>
+      </div>
+    </div>
   );
 };
 
@@ -101,18 +98,18 @@ const FacilityDetails = ({
   };
   return (
     <>
-      <div className="d-flex justify-content-between align-items-start mb-4">
+      <div className="flex justify-content-between align-items-start mb-4">
         <div>
           <h1 className="display-6 fw-bold mb-2">{facility.name}</h1>
-          <div className="d-flex align-items-center gap-3 text-muted">
-            <div className="d-flex align-items-center">
-              <FontAwesomeIcon icon={faMapMarkerAlt} className="me-2" />
+          <div className="flex align-items-center gap-3 text-muted">
+            <div className="flex align-items-center">
+              <MapPin className="w-4 h-4 mr-2" />
               <span>{facility.location.address}</span>
             </div>
             {facility.rating && (
-              <div className="d-flex align-items-center">
-                <FontAwesomeIcon icon={faStar} className="text-warning me-1" />
-                <span className="fw-semibold">{facility.rating.average}</span>
+              <div className="flex align-items-center">
+                <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
+                <span className="font-semibold">{facility.rating.average}</span>
                 <span className="ms-1 text-muted">
                   ({facility.rating.totalReviews} reviews)
                 </span>
@@ -121,10 +118,10 @@ const FacilityDetails = ({
           </div>
         </div>
       </div>
-      <div className="d-flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4">
         {hasVerifiedReviews && (
-          <Badge bg="success" className="d-flex align-items-center">
-            <FontAwesomeIcon icon={faCheck} className="me-1" />
+          <Badge bg="success" className="flex align-items-center">
+            <Check className="w-4 h-4 mr-1" />
             Verified
           </Badge>
         )}
@@ -134,69 +131,54 @@ const FacilityDetails = ({
           <Badge bg="warning">Currently Unavailable</Badge>
         )}
       </div>
-      <div className="mb-5">
+      <div className="mb-8">
         <h3 className="h4 fw-semibold mb-3">About this space</h3>
-        <p className="text-muted lh-lg">{facility.description}</p>
+        <p className="text-gray-600 dark:text-gray-400 lh-lg">{facility.description}</p>
         {facility.terms && (
           <div className="mt-3">
-            <h5 className="fw-semibold mb-2">Terms & Conditions</h5>
-            <p className="text-muted small">{facility.terms}</p>
+            <h5 className="font-semibold mb-2">Terms & Conditions</h5>
+            <p className="text-gray-600 dark:text-gray-400 small">{facility.terms}</p>
           </div>
         )}
       </div>
-      <Row className="mb-5">
-        <Col md={4} className="mb-3">
-          <div className="d-flex align-items-center">
-            <FontAwesomeIcon
-              icon={faUsers}
-              className="text-primary me-3 fs-4"
-            />
-            <div>
-              <div className="fw-semibold">Capacity</div>
-              <div className="text-muted small">
-                Up to {facility.capacity.maximum} guests
-              </div>
-              <div className="text-muted small">
-                Recommended: {facility.capacity.recommended}
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="flex items-center">
+          <Users className="w-6 h-6 text-primary-600 mr-3" />
+          <div>
+            <div className="font-semibold">Capacity</div>
+            <div className="text-gray-600 dark:text-gray-400 text-sm">
+              Up to {facility.capacity.maximum} guests
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 text-sm">
+              Recommended: {facility.capacity.recommended}
             </div>
           </div>
-        </Col>
-        <Col md={4} className="mb-3">
-          <div className="d-flex align-items-center">
-            <FontAwesomeIcon
-              icon={faClock}
-              className="text-primary me-3 fs-4"
-            />
-            <div>
-              <div className="fw-semibold">Operating Hours</div>
-              <div className="text-muted small">
-                {amPm(facility.operationalHours.opening)} -{' '}
-                {amPm(facility.operationalHours.closing)}
-              </div>
+        </div>
+        <div className="flex items-center">
+          <Clock className="w-6 h-6 text-primary-600 mr-3" />
+          <div>
+            <div className="font-semibold">Operating Hours</div>
+            <div className="text-gray-600 dark:text-gray-400 text-sm">
+              {amPm(facility.operationalHours.opening)} -{' '}
+              {amPm(facility.operationalHours.closing)}
             </div>
           </div>
-        </Col>
-        <Col md={4} className="mb-3">
-          <div className="d-flex align-items-center">
-            <FontAwesomeIcon
-              icon={faCalendarAlt}
-              className="text-primary me-3 fs-4"
-            />
-            <div>
-              <div className="fw-semibold">Availability</div>
-              <div className="text-muted small">
-                {
-                  facility.availability.filter(
-                    (a: { isAvailable: boolean }) => a.isAvailable
-                  ).length
-                }{' '}
-                days/week
-              </div>
+        </div>
+        <div className="flex items-center">
+          <Calendar className="w-6 h-6 text-primary-600 mr-3" />
+          <div>
+            <div className="font-semibold">Availability</div>
+            <div className="text-gray-600 dark:text-gray-400 text-sm">
+              {
+                facility.availability.filter(
+                  (a: { isAvailable: boolean }) => a.isAvailable
+                ).length
+              }{' '}
+              days/week
             </div>
           </div>
-        </Col>
-      </Row>
+        </div>
+      </div>
     </>
   );
 };
@@ -204,35 +186,33 @@ const FacilityDetails = ({
 // --- FacilityAmenities ---
 const getAmenityIcon = (amenity: string) => {
   const amenityLower = amenity.toLowerCase();
-  if (amenityLower.includes('wifi')) return faWifi;
-  if (amenityLower.includes('parking')) return faParking;
+  if (amenityLower.includes('wifi')) return Wifi;
+  if (amenityLower.includes('parking')) return Car;
   if (amenityLower.includes('coffee') || amenityLower.includes('catering'))
-    return faUtensils;
+    return Utensils;
   if (amenityLower.includes('projector') || amenityLower.includes('video'))
-    return faDesktop;
+    return Monitor;
   if (amenityLower.includes('air') || amenityLower.includes('climate'))
-    return faSnowflake;
-  return faCheck;
+    return Snowflake;
+  return Check;
 };
 interface FacilityAmenitiesProps {
   amenities: string[];
 }
 const FacilityAmenities = ({ amenities }: FacilityAmenitiesProps) => (
-  <div className="mb-5">
+  <div className="mb-8">
     <h3 className="h4 fw-semibold mb-3">What this place offers</h3>
-    <Row>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {amenities.map((amenity: string, idx: number) => (
-        <Col md={6} className="mb-3" key={idx}>
-          <div className="d-flex align-items-center">
-            <FontAwesomeIcon
-              icon={getAmenityIcon(amenity)}
-              className="text-primary me-3"
-            />
-            <span>{amenity}</span>
-          </div>
-        </Col>
+        <div className="flex items-center" key={idx}>
+          {(() => {
+            const IconComponent = getAmenityIcon(amenity);
+            return <IconComponent className="w-5 h-5 text-primary-600 mr-3" />;
+          })()}
+          <span className="text-gray-900 dark:text-gray-100">{amenity}</span>
+        </div>
       ))}
-    </Row>
+    </div>
   </div>
 );
 
@@ -302,27 +282,22 @@ const ReviewForm = ({
   return (
     <Card className="border-secondary shadow">
       <Card.Body className="p-4">
-        <h5 className="fw-semibold mb-3">Leave a Review</h5>
+        <h5 className="font-semibold mb-3">Leave a Review</h5>
         <Form onSubmit={handleSubmit}>
           {/* Form fields for review submission */}
           <div className="mb-3">
             <div>
               {[1, 2, 3, 4, 5].map(star => (
-                <FontAwesomeIcon
+                <Star
                   key={star}
-                  icon={faStar}
-                  className={`me-1 ${
-                    star <= rating ? 'text-warning' : 'text-secondary'
+                  className={`w-6 h-6 mr-1 cursor-pointer ${
+                    star <= rating ? 'text-yellow-500 fill-current' : 'text-gray-400'
                   }`}
-                  style={{
-                    cursor: 'pointer',
-                    fontSize: '1.5rem'
-                  }}
                   onClick={() => setRating(star)}
                   data-testid={`star-${star}`}
                 />
               ))}
-              <p className="text-muted small mt-1">{rating} out of 5 stars</p>
+              <p className="text-gray-600 dark:text-gray-400 small mt-1">{rating} out of 5 stars</p>
             </div>
           </div>
           <div className="mb-3">
@@ -399,9 +374,9 @@ const FacilityReviews = ({
     setReviewsData(reviews.reviews);
   }, [reviews.reviews]);
   return (
-    <div className="mb-5">
-      <div className="d-flex align-items-center mb-4">
-        <FontAwesomeIcon icon={faStar} className="text-warning me-2" />
+    <div className="mb-8">
+      <div className="flex align-items-center mb-4">
+        <Star className="w-5 h-5 text-yellow-500 mr-2 fill-current" />
         <h3 className="h4 fw-semibold mb-0">
           {facility.rating.average} · {facility.rating.totalReviews} reviews
         </h3>
@@ -439,7 +414,7 @@ const FacilityReviews = ({
             <SwiperSlide key={idx}>
               <Card className="border-secondary bg-opacity-50">
                 <Card.Body>
-                  <div className="d-flex align-items-center mb-2">
+                  <div className="flex align-items-center mb-2">
                     <div
                       className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
                       style={{ width: '40px', height: '40px' }}
@@ -449,24 +424,22 @@ const FacilityReviews = ({
                       </span>
                     </div>
                     <div>
-                      <div className="fw-semibold">{review.user?.name}</div>
-                      <div className="d-flex align-items-center">
+                      <div className="font-semibold">{review.user?.name}</div>
+                      <div className="flex align-items-center">
                         {[...Array(5)].map((_, i) => (
-                          <FontAwesomeIcon
+                          <Star
                             key={i}
-                            icon={faStar}
-                            className={
+                            className={`w-4 h-4 ${
                               i < review.rating
-                                ? 'text-warning'
-                                : 'text-secondary'
-                            }
-                            size="sm"
+                                ? 'text-yellow-500 fill-current'
+                                : 'text-gray-400'
+                            }`}
                           />
                         ))}
                       </div>
                     </div>
                   </div>
-                  <p className="text-muted mb-0">{review.comment}</p>
+                  <p className="text-gray-600 dark:text-gray-400 mb-0">{review.comment}</p>
                 </Card.Body>
               </Card>
             </SwiperSlide>
@@ -500,7 +473,7 @@ const FacilityReviews = ({
         </Col>
       </Row>
       {showReviewForm && (
-        <Row className="justify-content-center mt-3">
+        <Row className="justify-center mt-3">
           <Col>
             <ReviewForm
               facility={facility}
@@ -534,15 +507,15 @@ const FacilityBookingCard = ({
 }: FacilityBookingCardProps) => (
   <Card className="border-secondary shadow mb-3">
     <Card.Body className="p-4">
-      <div className="d-flex align-items-baseline mb-3">
+      <div className="flex align-items-baseline mb-3">
         <span className="h3 fw-bold mb-0">
           {currencyFormat(defaultPricing.amount || 0)}
         </span>
-        <span className="text-muted ms-2">per {defaultPricing.unit}</span>
+        <span className="text-gray-600 dark:text-gray-400 ms-2">per {defaultPricing.unit}</span>
       </div>
       {facility.pricing.length > 1 && (
         <div className="mb-3">
-          <small className="text-muted">Other pricing options:</small>
+          <small className="text-gray-600 dark:text-gray-400">Other pricing options:</small>
           {facility.pricing
             .filter((p: Pricing) => !p.isDefault)
             .map((pricing: Pricing, idx: number) => (
@@ -561,20 +534,20 @@ const FacilityBookingCard = ({
         </Link>
       </div>
       <div className="text-center">
-        <small className="text-muted">You won't be charged yet</small>
+        <small className="text-gray-600 dark:text-gray-400">You won't be charged yet</small>
       </div>
       <hr className="border-secondary" />
       <div className="small">
-        <div className="d-flex justify-content-between mb-2">
-          <span className="text-muted">Response time:</span>
+        <div className="flex justify-content-between mb-2">
+          <span className="text-gray-600 dark:text-gray-400">Response time:</span>
           <span>Within 1 hour</span>
         </div>
-        <div className="d-flex justify-content-between mb-2">
-          <span className="text-muted">Cancellation:</span>
+        <div className="flex justify-content-between mb-2">
+          <span className="text-gray-600 dark:text-gray-400">Cancellation:</span>
           <span>Free until 24h before</span>
         </div>
-        <div className="d-flex justify-content-between">
-          <span className="text-muted">Languages:</span>
+        <div className="flex justify-content-between">
+          <span className="text-gray-600 dark:text-gray-400">Languages:</span>
           <span>English, Spanish</span>
         </div>
       </div>
@@ -586,8 +559,8 @@ const FacilityBookingCard = ({
 const FacilityContactCard = () => (
   <Card className="border-secondary shadow">
     <Card.Body className="p-4 text-center">
-      <h5 className="fw-semibold mb-3">Need help?</h5>
-      <p className="text-muted small mb-3">
+      <h5 className="font-semibold mb-3">Need help?</h5>
+      <p className="text-gray-600 dark:text-gray-400 small mb-3">
         Our team is here to assist you with your booking
       </p>
       <Button variant="outline-primary" className="w-100">
