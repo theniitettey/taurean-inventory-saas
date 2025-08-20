@@ -13,8 +13,10 @@ import type {
 } from "@/types";
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
-const API_BASE =
+export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3000/api/v1";
+
+export const API_ORIGIN = new URL(API_BASE).origin;
 
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
@@ -97,6 +99,35 @@ export async function apiFetch<T>(
     throw new Error(message);
   }
   return (json?.data ?? json) as T;
+}
+
+export async function apiFetchBlob(
+  path: string,
+  options: RequestInit & { method?: HttpMethod } = {}
+): Promise<Blob> {
+  const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string>),
+  };
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
+  let res = await fetch(url, { ...options, headers });
+
+  if (res.status === 401 && refreshToken) {
+    try {
+      const newAccess = await refreshAccessToken();
+      headers.Authorization = `Bearer ${newAccess}`;
+      res = await fetch(url, { ...options, headers });
+    } catch {
+      // fall through
+    }
+  }
+
+  if (!res.ok) {
+    const message = res.statusText || "Request failed";
+    throw new Error(message);
+  }
+  return await res.blob();
 }
 
 // Auth endpoints
@@ -772,9 +803,9 @@ export const InvoicesAPI = {
   receiptsMine: () => apiFetch(`/invoices/me/receipts`, { method: "GET" }),
   getUserReceipts: () => apiFetch(`/invoices/me/receipts`, { method: "GET" }),
   downloadInvoice: (id: string) =>
-    apiFetch(`/invoices/${id}/download`, { method: "GET" }),
+    apiFetchBlob(`/invoices/${id}/download`, { method: "GET" }),
   downloadReceipt: (id: string) =>
-    apiFetch(`/invoices/receipts/${id}/download`, { method: "GET" }),
+    apiFetchBlob(`/invoices/receipts/${id}/download`, { method: "GET" }),
 };
 
 // Tax Schedules
@@ -842,11 +873,18 @@ export const TransactionsAPI = {
   // Export methods
   exportTransactions: (params?: Record<string, string>) => {
     const qs = params ? `?${new URLSearchParams(params)}` : "";
-    return apiFetch(`/transaction/export${qs}`, { method: "GET" });
+    return apiFetchBlob(`/transactions/export${qs}`, { method: "GET" });
   },
   exportUserTransactions: (params?: Record<string, string>) => {
     const qs = params ? `?${new URLSearchParams(params)}` : "";
-    return apiFetch(`/transaction/export/user${qs}`, { method: "GET" });
+    return apiFetchBlob(`/transactions/export/user${qs}`, { method: "GET" });
+  },
+  exportData: (
+    type: "transactions" | "bookings" | "invoices",
+    params?: Record<string, string>
+  ) => {
+    const qs = params ? `?${new URLSearchParams(params)}` : "";
+    return apiFetchBlob(`/transactions/export/${type}${qs}`, { method: "GET" });
   },
 };
 

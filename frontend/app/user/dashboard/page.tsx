@@ -135,15 +135,7 @@ const UserDashboard = () => {
 
   const handleDownloadInvoice = async (invoiceId: string, invoiceNumber: string) => {
     try {
-      const response = await fetch(`/api/v1/invoices/${invoiceId}/download`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("Failed to download invoice");
-
-      const blob = await response.blob();
+      const blob = await InvoicesAPI.downloadInvoice(invoiceId);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.style.display = "none";
@@ -169,15 +161,7 @@ const UserDashboard = () => {
 
   const handleDownloadReceipt = async (receiptId: string) => {
     try {
-      const response = await fetch(`/api/v1/invoices/receipts/${receiptId}/download`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("Failed to download receipt");
-
-      const blob = await response.blob();
+      const blob = await InvoicesAPI.downloadReceipt(receiptId);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.style.display = "none";
@@ -203,15 +187,7 @@ const UserDashboard = () => {
 
   const handleExportTransactions = async (format: "csv" | "excel") => {
     try {
-      const response = await fetch(`/api/v1/transactions/export/user?format=${format}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("Failed to export transactions");
-
-      const blob = await response.blob();
+      const blob = (await TransactionsAPI.exportUserTransactions({ format })) as unknown as Blob;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.style.display = "none";

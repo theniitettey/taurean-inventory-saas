@@ -89,11 +89,10 @@ const BookingManagement = ({
     const filtered = bookings.filter((booking) => {
       if (!booking || booking.isDeleted) return false;
 
+      const facilityName = facilities.find(f => f._id === (booking.facility as any))?.name || "";
       const matchesSearch =
         booking.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.facility?.name
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
+        facilityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         booking.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
@@ -578,7 +577,7 @@ const BookingManagement = ({
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">
-                        {booking.facility?.name || "Unknown Facility"}
+                        {facilities.find(f => f._id === (booking.facility as any))?.name || "Unknown Facility"}
                       </TableCell>
                       <TableCell>
                         <div>
@@ -685,10 +684,9 @@ const BookingManagement = ({
               <div className="space-y-2">
                 <Label htmlFor="facility">Facility *</Label>
                 <Select
-                  value={formData.facility?._id || ""}
+                  value={(formData.facility as any) || ""}
                   onValueChange={(value) => {
-                    const facility = facilities.find((f) => f._id === value);
-                    setFormData((prev) => ({ ...prev, facility }));
+                    setFormData((prev) => ({ ...prev, facility: value as any }));
                   }}
                 >
                   <SelectTrigger>

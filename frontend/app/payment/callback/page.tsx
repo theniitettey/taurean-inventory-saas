@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { TransactionsAPI } from "@/lib/api";
+import { InvoicesAPI, TransactionsAPI } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/ui/loader";
@@ -106,18 +106,9 @@ const PaymentCallbackPage = () => {
     if (!paymentResult?.data?.receipt) return;
 
     try {
-      const response = await fetch(
-        `/api/v1/invoices/receipts/${paymentResult.data.receipt._id}/download`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
+      const blob = await InvoicesAPI.downloadReceipt(
+        paymentResult.data.receipt._id
       );
-
-      if (!response.ok) throw new Error("Failed to download receipt");
-
-      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.style.display = "none";
@@ -145,18 +136,9 @@ const PaymentCallbackPage = () => {
     if (!paymentResult?.data?.invoice) return;
 
     try {
-      const response = await fetch(
-        `/api/v1/invoices/${paymentResult.data.invoice._id}/download`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
+      const blob = await InvoicesAPI.downloadInvoice(
+        paymentResult.data.invoice._id
       );
-
-      if (!response.ok) throw new Error("Failed to download invoice");
-
-      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.style.display = "none";

@@ -60,10 +60,10 @@ const BookingCalendar = ({
         .filter((b) => filterStatus === "all" || b.status === filterStatus)
         .filter((b) => {
           if (filterFacility === "all") return true;
-          return b.facility && b.facility._id === filterFacility;
+          return Boolean(b.facility) && (b.facility as any) === filterFacility;
         })
         .map((b) => ({
-          title: `${b.facility?.name || "Unknown Facility"} - ${
+          title: `${(b as any).facility?.name || "Unknown Facility"} - ${
             b.user?.name || "Unknown User"
           }`,
           start: b.startDate
@@ -76,7 +76,7 @@ const BookingCalendar = ({
           borderColor: getStatusColor(b.status),
           extendedProps: {
             booking: b,
-            facility: b.facility,
+            facility: (b as any).facility,
           },
         }));
 

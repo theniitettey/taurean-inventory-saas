@@ -194,10 +194,10 @@ export function EnhancedChatWidget() {
   useEffect(() => {
     if (isOpen && user && activeMode === "support") {
       const newSocket = io(
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000",
+        process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001",
         {
           auth: {
-            token: localStorage.getItem("accessToken"),
+            token: localStorage.getItem("fh_access") || localStorage.getItem("accessToken"),
           },
         }
       );

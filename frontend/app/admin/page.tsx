@@ -214,15 +214,7 @@ export default function AdminPage() {
 
   const handleExportData = async (type: "transactions" | "bookings" | "invoices", format: "csv" | "excel") => {
     try {
-      const response = await fetch(`/api/v1/transactions/export/${type}?format=${format}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-
-      if (!response.ok) throw new Error(`Failed to export ${type}`);
-
-      const blob = await response.blob();
+      const blob = (await TransactionsAPI.exportData(type, { format })) as unknown as Blob;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.style.display = "none";

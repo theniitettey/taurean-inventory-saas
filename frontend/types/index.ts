@@ -589,7 +589,7 @@ export interface NotificationPreferences {
 export interface CompanyJoinRequest {
   _id: string;
   user: string | User;
-  company: string | Company;
+  company: string | CompanyBasic;
   status: "pending" | "approved" | "rejected";
   requestedBy: string | User;
   approvedBy?: string | User;
@@ -599,7 +599,7 @@ export interface CompanyJoinRequest {
   updatedAt: Date;
 }
 
-export interface Company {
+export interface CompanyBasic {
   _id: string;
   name: string;
   description?: string;
