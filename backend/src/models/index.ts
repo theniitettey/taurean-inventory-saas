@@ -20,3 +20,8 @@ export {
   CompanyJoinRequestModel,
   ICompanyJoinRequest,
 } from "./companyJoinRequest.model";
+
+export { NewsletterSubscriberModel } from "./newsletterSubscriber.model";
+export { NewsletterCampaignModel } from "./newsletterCampaign.model";
+export { NewsletterTemplateModel } from "./newsletterTemplate.model";
+export { UnsubscriptionModel } from "./unsubscription.model";

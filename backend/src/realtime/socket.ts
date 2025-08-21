@@ -4,8 +4,21 @@ import { verifyToken } from "../helpers/token.helper";
 import { SupportTicketModel } from "../models/supportTicket.model";
 import { SupportMessageModel } from "../models/supportMessage.model";
 import { UserModel } from "../models/user.model";
+import { Events } from "./events";
+import { notifyUser, notifyCompany } from "../services/notification.service";
 
 let io: Server | null = null;
+
+// Track online users
+const onlineUsers = new Map<string, { socketId: string; lastActivity: Date; companyId?: string }>();
+
+// Track system health
+let systemHealth = {
+  status: 'healthy',
+  lastCheck: new Date(),
+  connectedUsers: 0,
+  activeConnections: 0,
+};
 
 export function initSocket(server: HttpServer): Server {
   io = new Server(server, {
@@ -42,11 +55,37 @@ export function initSocket(server: HttpServer): Server {
   });
 
   io.on("connection", (socket: Socket) => {
-    console.log(`Socket connected: ${(socket as any).user?.id || "anonymous"}`);
+    const userId = (socket as any).user?.id;
+    const companyId = (socket as any).user?.companyId;
+    
+    console.log(`Socket connected: ${userId || "anonymous"}`);
+    
+    // Update system health
+    systemHealth.activeConnections++;
+    systemHealth.lastCheck = new Date();
+    
+    // Track user online status
+    if (userId) {
+      onlineUsers.set(userId, { 
+        socketId: socket.id, 
+        lastActivity: new Date(), 
+        companyId 
+      });
+      systemHealth.connectedUsers = onlineUsers.size;
+      
+      // Emit user online event
+      emitToCompany(companyId, Events.UserOnline, { userId, timestamp: new Date() });
+      
+      // Update user's last activity
+      UserModel.findByIdAndUpdate(userId, { 
+        lastLoginAt: new Date(),
+        isOnline: true 
+      }).catch(console.error);
+    }
 
     // Join user's company room
-    if ((socket as any).user?.companyId) {
-      socket.join(`company:${(socket as any).user.companyId}`);
+    if (companyId) {
+      socket.join(`company:${companyId}`);
     }
 
     // Join super admin room if applicable
@@ -134,10 +173,69 @@ export function initSocket(server: HttpServer): Server {
       socket.to(`ticket:${data.ticketId}`).emit("ticket-updated", data.updates);
     });
 
+    // Handle user activity tracking
+    socket.on("activity", (data: { type: string; timestamp: Date }) => {
+      const userId = (socket as any).user?.id;
+      const companyId = (socket as any).user?.companyId;
+      
+      if (userId && onlineUsers.has(userId)) {
+        const userInfo = onlineUsers.get(userId)!;
+        userInfo.lastActivity = new Date();
+        onlineUsers.set(userId, userInfo);
+        
+        // Emit user activity event
+        emitToCompany(companyId, Events.UserActivity, {
+          userId,
+          activity: data.type,
+          timestamp: data.timestamp || new Date()
+        });
+      }
+    });
+
+    // Handle real-time dashboard updates
+    socket.on("request-dashboard-update", async () => {
+      const companyId = (socket as any).user?.companyId;
+      if (companyId) {
+        // This would trigger a dashboard update with fresh data
+        socket.emit(Events.DashboardUpdate, { 
+          timestamp: new Date(),
+          message: "Dashboard data refreshed"
+        });
+      }
+    });
+
+    // Handle system health checks
+    socket.on("health-check", () => {
+      socket.emit(Events.SystemHealth, {
+        ...systemHealth,
+        timestamp: new Date()
+      });
+    });
+
     socket.on("disconnect", () => {
-      console.log(
-        `Socket disconnected: ${(socket as any).user?.id || "anonymous"}`
-      );
+      const userId = (socket as any).user?.id;
+      const companyId = (socket as any).user?.companyId;
+      
+      console.log(`Socket disconnected: ${userId || "anonymous"}`);
+      
+      // Update system health
+      systemHealth.activeConnections--;
+      systemHealth.lastCheck = new Date();
+      
+      // Track user offline status
+      if (userId && onlineUsers.has(userId)) {
+        onlineUsers.delete(userId);
+        systemHealth.connectedUsers = onlineUsers.size;
+        
+        // Emit user offline event
+        emitToCompany(companyId, Events.UserOffline, { userId, timestamp: new Date() });
+        
+        // Update user's online status
+        UserModel.findByIdAndUpdate(userId, { 
+          isOnline: false,
+          lastSeenAt: new Date()
+        }).catch(console.error);
+      }
     });
   });
 
@@ -181,4 +279,87 @@ export function emitToSuperAdmin(event: string, payload: any) {
 export function emitToUser(userId: string, event: string, payload: any) {
   const ioInstance = getIo();
   ioInstance.to(`user:${userId}`).emit(event, payload);
+}
+
+// Enhanced notification functions
+export async function broadcastNotification(event: string, payload: any, options?: {
+  userIds?: string[];
+  companyIds?: string[];
+  superAdminOnly?: boolean;
+  excludeUsers?: string[];
+}) {
+  const ioInstance = getIo();
+  
+  if (options?.superAdminOnly) {
+    ioInstance.to("super-admin").emit(event, payload);
+  } else if (options?.companyIds) {
+    options.companyIds.forEach(companyId => {
+      ioInstance.to(`company:${companyId}`).emit(event, payload);
+    });
+  } else if (options?.userIds) {
+    options.userIds.forEach(userId => {
+      if (!options.excludeUsers?.includes(userId)) {
+        ioInstance.to(`user:${userId}`).emit(event, payload);
+      }
+    });
+  } else {
+    ioInstance.emit(event, payload);
+  }
+}
+
+// System health monitoring
+export function getSystemHealth() {
+  return {
+    ...systemHealth,
+    onlineUsers: Array.from(onlineUsers.entries()).map(([userId, info]) => ({
+      userId,
+      lastActivity: info.lastActivity,
+      companyId: info.companyId
+    }))
+  };
+}
+
+export function broadcastSystemAlert(alert: {
+  level: 'info' | 'warning' | 'error' | 'critical';
+  title: string;
+  message: string;
+  data?: any;
+}) {
+  const ioInstance = getIo();
+  ioInstance.emit(Events.SystemAlert, {
+    ...alert,
+    timestamp: new Date()
+  });
+}
+
+// Email delivery status updates
+export function emitEmailStatus(userId: string, companyId: string, status: {
+  emailId: string;
+  status: 'sent' | 'failed' | 'delivered' | 'scheduled';
+  message?: string;
+  timestamp?: Date;
+}) {
+  const event = status.status === 'sent' ? Events.EmailSent :
+                status.status === 'failed' ? Events.EmailFailed :
+                status.status === 'delivered' ? Events.EmailDelivered :
+                Events.EmailScheduled;
+  
+  emitToUser(userId, event, { ...status, timestamp: status.timestamp || new Date() });
+  emitToCompany(companyId, event, { ...status, timestamp: status.timestamp || new Date() });
+}
+
+// Dashboard real-time updates
+export function emitDashboardUpdate(companyId: string, updateType: string, data: any) {
+  emitToCompany(companyId, Events.DashboardUpdate, {
+    type: updateType,
+    data,
+    timestamp: new Date()
+  });
+}
+
+export function emitStatsUpdate(companyId: string, stats: any) {
+  emitToCompany(companyId, Events.StatsUpdate, {
+    stats,
+    timestamp: new Date()
+  });
 }

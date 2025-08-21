@@ -98,4 +98,25 @@ router.get(
   SupportController.getAvailableStaff
 );
 
+// Advanced ticket management routes
+router.get("/tickets", SupportController.getTicketsAdvanced);
+
+router.put(
+  "/tickets/bulk",
+  AuthorizeRoles("admin", "staff"),
+  SupportController.bulkUpdateTickets
+);
+
+router.delete(
+  "/tickets/bulk",
+  AuthorizeRoles("admin", "staff"),
+  SupportController.bulkDeleteTickets
+);
+
+router.get(
+  "/analytics",
+  AuthorizeRoles("admin", "staff"),
+  SupportController.getTicketAnalytics
+);
+
 export default router;

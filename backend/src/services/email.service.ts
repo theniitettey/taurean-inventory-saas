@@ -368,7 +368,8 @@ class EmailService {
                       </p>
                       
                       <p style="font-size: 12px; color: #718096; margin-top: 15px;">
-                          © {{currentYear}} {{company.name}}. All rights reserved.
+                          © {{currentYear}} {{company.name}}. All rights reserved.<br>
+                          <em>Powered by Taurean IT Logistics</em>
                       </p>
                   </div>
               </div>
@@ -986,7 +987,7 @@ class EmailService {
 
       const mailOptions = {
         from: {
-          name: options.context.company?.name || "Taurean IT Logistics",
+          name: "Taurean IT Logistics",
           address:
             process.env.EMAIL_FROM ||
             process.env.EMAIL_USER ||

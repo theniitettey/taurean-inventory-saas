@@ -72,6 +72,35 @@ router.post(
   EmailController.sendBulkEmail
 );
 
+// Email scheduling endpoints
+router.post(
+  "/schedule",
+  RequireActiveCompany(),
+  RequirePermissions(["manageSettings"]),
+  EmailController.scheduleEmailEndpoint
+);
+
+router.delete(
+  "/schedule/:jobId",
+  RequireActiveCompany(),
+  RequirePermissions(["manageSettings"]),
+  EmailController.cancelScheduledEmailEndpoint
+);
+
+router.get(
+  "/scheduled",
+  RequireActiveCompany(),
+  RequirePermissions(["viewSettings"]),
+  EmailController.getScheduledEmailsEndpoint
+);
+
+router.get(
+  "/analytics",
+  RequireActiveCompany(),
+  RequirePermissions(["viewSettings"]),
+  EmailController.getEmailAnalytics
+);
+
 // Email settings management
 router.get(
   "/settings/:companyId",

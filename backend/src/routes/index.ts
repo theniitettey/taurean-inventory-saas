@@ -22,6 +22,7 @@ import subscriptionRoutes from "./subscription.route";
 import supportRoutes from "./support.route";
 import emailRoutes from "./email.route";
 import reviewRoutes from "./review.routes";
+import newsletterRoutes from "./newsletter.route";
 
 const router = Router();
 
@@ -48,5 +49,6 @@ router.use("/subscriptions", subscriptionRoutes);
 router.use("/support", supportRoutes);
 router.use("/email", emailRoutes);
 router.use("/reviews", reviewRoutes);
+router.use("/newsletter", newsletterRoutes);
 
 export default router;

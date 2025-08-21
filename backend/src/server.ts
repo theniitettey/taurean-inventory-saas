@@ -13,6 +13,8 @@ import { Logger } from "./utils";
 import swaggerUi from "swagger-ui-express";
 import routes from "./routes";
 import { initSocket } from "./realtime/socket";
+import { startEmailWorker, startDeletionWorker } from "./queues";
+import { emailScheduler } from "./services/emailScheduler.service";
 
 const app: express.Application = express();
 const server = createServer(app);
@@ -36,6 +38,16 @@ app.use("/api/v1", routes);
 function startServer() {
   Logger("Initializing Server...", null, "server-core", "info");
   const PORT = process.env.PORT || 3000;
+
+  // Initialize workers and schedulers
+  try {
+    startEmailWorker();
+    startDeletionWorker();
+    emailScheduler.initialize();
+    console.log("Workers and schedulers initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize workers:", error);
+  }
 
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

@@ -3,6 +3,7 @@ import { emailService } from "../services/email.service";
 import { sendSuccess, sendError, sendValidationError } from "../utils";
 import { CompanyModel } from "../models/company.model";
 import { UserModel } from "../models/user.model";
+import { scheduleEmail, scheduleRecurringEmail, cancelScheduledEmail, getScheduledEmails, ScheduledEmailJob } from "../queues";
 
 export async function testEmailConfiguration(req: Request, res: Response) {
   try {
@@ -271,5 +272,153 @@ export async function getEmailSettings(req: Request, res: Response) {
     });
   } catch (error: any) {
     sendError(res, "Failed to get email settings", error.message);
+  }
+}
+
+export async function scheduleEmailEndpoint(req: Request, res: Response) {
+  try {
+    const userId = (req.user as any)?.id;
+    const companyId = (req.user as any)?.companyId;
+    
+    if (!userId || !companyId) {
+      sendError(res, "User authentication required", null, 401);
+      return;
+    }
+
+    const {
+      type,
+      to,
+      subject,
+      content,
+      templateData,
+      scheduledFor,
+      priority,
+      retryAttempts,
+      recurring
+    } = req.body;
+
+    if (!type || !to || !scheduledFor) {
+      sendError(res, "Type, recipient, and scheduled time are required", null, 400);
+      return;
+    }
+
+    const emailJob: ScheduledEmailJob = {
+      type,
+      to,
+      subject,
+      content,
+      templateData,
+      companyId,
+      userId,
+      scheduledFor: new Date(scheduledFor),
+      priority: priority || 'normal',
+      retryAttempts: retryAttempts || 3,
+      recurring
+    };
+
+    let job;
+    if (recurring) {
+      const jobs = await scheduleRecurringEmail(emailJob);
+      job = { id: 'recurring', jobCount: jobs.length, jobs: jobs.map(j => j.id) };
+    } else {
+      job = await scheduleEmail(emailJob);
+    }
+
+    sendSuccess(res, "Email scheduled successfully", { 
+      jobId: job.id, 
+      scheduledFor: emailJob.scheduledFor,
+      recurring: !!recurring 
+    });
+  } catch (error: any) {
+    sendError(res, "Failed to schedule email", error.message, 500);
+  }
+}
+
+export async function cancelScheduledEmailEndpoint(req: Request, res: Response) {
+  try {
+    const { jobId } = req.params;
+    const userId = (req.user as any)?.id;
+    
+    if (!userId) {
+      sendError(res, "User authentication required", null, 401);
+      return;
+    }
+
+    const success = await cancelScheduledEmail(jobId);
+    
+    if (success) {
+      sendSuccess(res, "Scheduled email cancelled successfully");
+    } else {
+      sendError(res, "Failed to cancel email or job not found", null, 404);
+    }
+  } catch (error: any) {
+    sendError(res, "Failed to cancel scheduled email", error.message, 500);
+  }
+}
+
+export async function getScheduledEmailsEndpoint(req: Request, res: Response) {
+  try {
+    const userId = (req.user as any)?.id;
+    const companyId = (req.user as any)?.companyId;
+    
+    if (!userId || !companyId) {
+      sendError(res, "User authentication required", null, 401);
+      return;
+    }
+
+    const { includeCompanyEmails } = req.query;
+    
+    const emails = await getScheduledEmails(
+      includeCompanyEmails === 'true' ? companyId : undefined,
+      userId
+    );
+
+    sendSuccess(res, "Scheduled emails retrieved successfully", { emails });
+  } catch (error: any) {
+    sendError(res, "Failed to retrieve scheduled emails", error.message, 500);
+  }
+}
+
+export async function getEmailAnalytics(req: Request, res: Response) {
+  try {
+    const companyId = (req.user as any)?.companyId;
+    
+    if (!companyId) {
+      sendError(res, "Company authentication required", null, 401);
+      return;
+    }
+
+    const { startDate, endDate } = req.query;
+    const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate as string) : new Date();
+
+    // This would typically query email delivery logs from your email service provider
+    // For now, we'll return mock analytics data
+    const analytics = {
+      totalEmails: 0,
+      deliveredEmails: 0,
+      failedEmails: 0,
+      openRate: 0,
+      clickRate: 0,
+      bounceRate: 0,
+      unsubscribeRate: 0,
+      emailTypes: {
+        welcome: 0,
+        invoice: 0,
+        receipt: 0,
+        booking: 0,
+        newsletter: 0,
+        custom: 0
+      },
+      deliveryTrends: [],
+      period: {
+        start,
+        end
+      }
+    };
+
+    sendSuccess(res, "Email analytics retrieved successfully", { analytics });
+  } catch (error: any) {
+    sendError(res, "Failed to retrieve email analytics", error.message, 500);
   }
 }
