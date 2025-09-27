@@ -579,3 +579,56 @@ export interface Rental {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface Expense {
+  _id?: string;
+  company: string | Company;
+  user: string | User;
+  category: string;
+  description: string;
+  amount: number;
+  date: Date;
+  attachments?: string[];
+  notes?: string;
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Discount {
+  _id?: string;
+  company: string | Company;
+  name: string;
+  code?: string;
+  type: "percentage" | "fixed";
+  value: number;
+  appliesTo: "all" | "facility" | "inventory_item";
+  targetId?: string;
+  minimumAmount?: number;
+  usageLimit?: number;
+  usedCount: number;
+  startDate: Date;
+  endDate: Date;
+  isActive: boolean;
+  createdBy: string | User;
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DocumentFile {
+  _id?: string;
+  company: string | Company;
+  uploadedBy: string | User;
+  fileName: string;
+  originalName: string;
+  filePath: string;
+  mimetype: string;
+  size: number;
+  category: string;
+  description?: string;
+  tags?: string[];
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}

@@ -1,4 +1,4 @@
-import { Schema, model, Model, Document } from "mongoose";
+import mongoose, { Schema, model, Model, Document } from "mongoose";
 
 export interface Expense {
   _id?: string;
@@ -40,39 +40,34 @@ export interface Expense {
   updatedAt: Date;
 }
 
-interface ExpenseDocument extends Document, Expense {}
+interface ExpenseDocument extends Document {
+  company: mongoose.Types.ObjectId;
+  user: mongoose.Types.ObjectId;
+  createdBy: mongoose.Types.ObjectId;
+  approvedBy?: mongoose.Types.ObjectId;
+  _id: mongoose.Types.ObjectId;
+  category: string;
+  description: string;
+  amount: number;
+  date: Date;
+  attachments?: string[];
+  notes?: string;
+  status: "pending" | "approved" | "rejected";
+  isRecurring: boolean;
+  recurringFrequency?: "daily" | "weekly" | "monthly" | "yearly";
+  recurringEndDate?: Date;
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const ExpenseSchema = new Schema<ExpenseDocument>(
   {
     company: { type: Schema.Types.ObjectId, ref: "Company", required: true },
     category: { type: String, required: true, trim: true },
-    subcategory: { type: String, trim: true },
     description: { type: String, required: true, trim: true },
     amount: { type: Number, required: true, min: 0 },
-    currency: { type: String, default: "GHS" },
     date: { type: Date, required: true },
-    paymentMethod: {
-      type: String,
-      enum: ["cash", "paystack", "mobile_money", "bank_transfer", "cheque"],
-      required: true,
-    },
-    paymentDetails: {
-      paystackReference: { type: String },
-      chequeNumber: { type: String },
-      bankDetails: {
-        bankName: { type: String },
-        accountNumber: { type: String },
-        sortCode: { type: String },
-      },
-      mobileMoneyDetails: {
-        provider: { type: String },
-        phoneNumber: { type: String },
-        transactionId: { type: String },
-      },
-    },
-    vendor: { type: String, trim: true },
-    receiptUrl: { type: String },
-    tags: [{ type: String, trim: true }],
     isRecurring: { type: Boolean, default: false },
     recurringFrequency: {
       type: String,

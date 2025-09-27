@@ -38,8 +38,8 @@ export const createRentalController = async (req: Request, res: Response): Promi
       amount,
       transaction,
       notes,
-      user: userId,
-      company: companyId,
+      user: userId as any,
+      company: companyId as any,
     };
 
     const rental = await createRental(rentalData);

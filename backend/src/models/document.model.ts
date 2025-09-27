@@ -1,4 +1,4 @@
-import { Schema, model, Model, Document } from "mongoose";
+import mongoose, { Schema, model, Model, Document } from "mongoose";
 
 export interface DocumentFile {
   _id?: string;
@@ -18,14 +18,28 @@ export interface DocumentFile {
   updatedAt: Date;
 }
 
-interface DocumentFileDocument extends Document, DocumentFile {}
+interface DocumentFileDocument extends Document {
+  company: mongoose.Types.ObjectId;
+  uploadedBy: mongoose.Types.ObjectId;
+  _id: mongoose.Types.ObjectId;
+  fileName: string;
+  originalName: string;
+  filePath: string;
+  mimetype: string;
+  size: number;
+  category: string;
+  description?: string;
+  tags?: string[];
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const DocumentFileSchema = new Schema<DocumentFileDocument>(
   {
     company: { type: Schema.Types.ObjectId, ref: "Company", required: true },
-    name: { type: String, required: true, trim: true },
     originalName: { type: String, required: true, trim: true },
-    path: { type: String, required: true },
+    filePath: { type: String, required: true },
     mimetype: { type: String, required: true },
     size: { type: Number, required: true, min: 0 },
     category: {
@@ -36,7 +50,6 @@ const DocumentFileSchema = new Schema<DocumentFileDocument>(
     description: { type: String, trim: true },
     tags: [{ type: String, trim: true }],
     uploadedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    isPublic: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }

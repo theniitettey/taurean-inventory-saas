@@ -90,7 +90,12 @@ const sendEmailNotification = async (
     await emailService.sendEmail({
       to: user.email,
       subject: emailSubject,
-      html: emailBody,
+      template: "custom",
+      context: {
+        company: { name: "Taurean IT Logistics" },
+        user: { name: user.name, email: user.email },
+        content: emailBody,
+      },
     });
   } catch (error) {
     console.error("Failed to send email notification:", error);
@@ -276,8 +281,8 @@ const createBookingNotification = async (bookingId: string, type: "created" | "u
     const notificationData = notificationTypes[type];
 
     await createNotification({
-      companyId: booking.company as string,
-      userId: booking.user as string,
+      companyId: (booking.company as any)?._id || booking.company,
+      userId: (booking.user as any)?._id || booking.user,
       type: notificationData.type,
       title: notificationData.title,
       message: notificationData.message,
@@ -311,8 +316,8 @@ const createRentalNotification = async (rentalId: string, type: "created" | "ret
     const notificationData = notificationTypes[type];
 
     await createNotification({
-      companyId: rental.company as string,
-      userId: rental.user as string,
+      companyId: (rental.company as any)?._id || rental.company,
+      userId: (rental.user as any)?._id || rental.user,
       type: notificationData.type,
       title: notificationData.title,
       message: notificationData.message,
@@ -381,7 +386,7 @@ const createSubscriptionNotification = async (companyId: string, type: "expiring
     for (const user of users) {
       await createNotification({
         companyId,
-        userId: user._id,
+        userId: (user as any)._id || user,
         type: notificationData.type,
         title: notificationData.title,
         message: notificationData.message,

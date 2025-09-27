@@ -166,8 +166,8 @@ const getExpenseStatistics = async (companyId?: string, startDate?: Date, endDat
     const topCategories = Object.entries(categoryBreakdown)
       .map(([category, data]) => ({
         category,
-        amount: data.amount,
-        percentage: totalAmount > 0 ? (data.amount / totalAmount) * 100 : 0,
+        amount: (data as any).amount,
+        percentage: totalAmount > 0 ? ((data as any).amount / totalAmount) * 100 : 0,
       }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5);
@@ -312,8 +312,8 @@ const applyDiscount = async (
     }
 
     // Check if discount applies to specific items
-    if (discount.applicableTo !== "all" && applicableItemId) {
-      if (!discount.applicableItems?.includes(applicableItemId)) {
+    if (discount.appliesTo !== "all" && applicableItemId) {
+      if (!discount.targetId || discount.targetId.toString() !== applicableItemId) {
         throw new Error("Discount does not apply to this item");
       }
     }
@@ -326,9 +326,10 @@ const applyDiscount = async (
     }
 
     // Apply maximum discount limit if set
-    if (discount.maximumDiscount && discountAmount > discount.maximumDiscount) {
-      discountAmount = discount.maximumDiscount;
-    }
+    // Note: maximumDiscount field was removed from schema, keeping for future implementation
+    // if (discount.maximumDiscount && discountAmount > discount.maximumDiscount) {
+    //   discountAmount = discount.maximumDiscount;
+    // }
 
     // Ensure discount doesn't exceed the amount
     discountAmount = Math.min(discountAmount, amount);

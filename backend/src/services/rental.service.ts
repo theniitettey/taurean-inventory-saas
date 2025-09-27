@@ -305,7 +305,7 @@ const getOverdueRentals = async (
     );
 
     return {
-      rentals: rentals.map(r => ({ ...r.toObject(), status: "overdue" })),
+      rentals: rentals.map(r => ({ ...r.toObject(), status: "overdue" })) as any,
       total,
       totalPages: Math.ceil(total / limit),
       currentPage: page

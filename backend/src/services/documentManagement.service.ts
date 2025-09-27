@@ -42,7 +42,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("File type not allowed"), false);
+    cb(new Error("File type not allowed") as any, false);
   }
 };
 
@@ -235,8 +235,8 @@ const deleteDocument = async (documentId: string): Promise<boolean> => {
     await DocumentFileModel.findByIdAndUpdate(documentId, { isDeleted: true });
 
     // Optionally delete the actual file
-    if (fs.existsSync(document.path)) {
-      fs.unlinkSync(document.path);
+    if (fs.existsSync(document.filePath)) {
+      fs.unlinkSync(document.filePath);
     }
 
     return true;
@@ -320,7 +320,7 @@ const getDocumentStatistics = async (companyId?: string): Promise<{
 const getDocumentPreviewUrl = async (documentId: string): Promise<string | null> => {
   try {
     const document = await DocumentFileModel.findById(documentId);
-    if (!document || !fs.existsSync(document.path)) {
+    if (!document || !fs.existsSync(document.filePath)) {
       return null;
     }
 
@@ -342,12 +342,12 @@ const getDocumentPreviewUrl = async (documentId: string): Promise<string | null>
 const downloadDocument = async (documentId: string): Promise<{ path: string; filename: string; mimetype: string } | null> => {
   try {
     const document = await DocumentFileModel.findById(documentId);
-    if (!document || !fs.existsSync(document.path)) {
+    if (!document || !fs.existsSync(document.filePath)) {
       return null;
     }
 
     return {
-      path: document.path,
+      path: document.filePath,
       filename: document.originalName,
       mimetype: document.mimetype,
     };

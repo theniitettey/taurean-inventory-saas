@@ -10,7 +10,7 @@ import {
 interface InfoCardProps {
   title: string;
   children: React.ReactNode;
-  variant?: 'default' | 'success' | 'warning' | 'error';
+  variant?: 'default' | 'success' | 'warning' | 'error' | 'info';
 }
 
 export const InfoCard: React.FC<InfoCardProps> = ({
@@ -37,6 +37,12 @@ export const InfoCard: React.FC<InfoCardProps> = ({
           background: '#fed7d7',
           borderColor: '#feb2b2',
           titleColor: '#c53030',
+        };
+      case 'info':
+        return {
+          background: '#e6f3ff',
+          borderColor: '#90cdf4',
+          titleColor: '#2a4365',
         };
       default:
         return {

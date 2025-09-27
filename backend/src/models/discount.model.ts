@@ -1,4 +1,4 @@
-import { Schema, model, Model, Document } from "mongoose";
+import mongoose, { Schema, model, Model, Document } from "mongoose";
 
 export interface Discount {
   _id?: string;
@@ -22,13 +22,31 @@ export interface Discount {
   updatedAt: Date;
 }
 
-interface DiscountDocument extends Document, Discount {}
+interface DiscountDocument extends Document {
+  company: mongoose.Types.ObjectId;
+  createdBy: mongoose.Types.ObjectId;
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  code?: string;
+  type: "percentage" | "fixed";
+  value: number;
+  appliesTo: "all" | "facility" | "inventory_item";
+  targetId?: mongoose.Types.ObjectId;
+  minimumAmount?: number;
+  usageLimit?: number;
+  usedCount: number;
+  startDate: Date;
+  endDate: Date;
+  isActive: boolean;
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const DiscountSchema = new Schema<DiscountDocument>(
   {
     company: { type: Schema.Types.ObjectId, ref: "Company", required: true },
     name: { type: String, required: true, trim: true },
-    description: { type: String, trim: true },
     type: {
       type: String,
       enum: ["percentage", "fixed"],
@@ -36,13 +54,12 @@ const DiscountSchema = new Schema<DiscountDocument>(
     },
     value: { type: Number, required: true, min: 0 },
     minimumAmount: { type: Number, min: 0 },
-    maximumDiscount: { type: Number, min: 0 },
-    applicableTo: {
+    appliesTo: {
       type: String,
-      enum: ["all", "facility", "inventory_item", "booking"],
-      required: true,
+      enum: ["all", "facility", "inventory_item"],
+      default: "all",
     },
-    applicableItems: [{ type: Schema.Types.ObjectId }],
+    targetId: { type: Schema.Types.ObjectId, refPath: "appliesTo" },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     usageLimit: { type: Number, min: 1 },
