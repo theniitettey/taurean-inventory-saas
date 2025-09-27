@@ -7,6 +7,15 @@ import {
   RequireCompanyContext,
 } from "../middlewares/auth.middleware";
 import { TransactionService } from "../services";
+import {
+  processCashPaymentController,
+  processSplitPaymentController,
+  processAdvancePaymentController,
+  applyAdvancePaymentController,
+  getAdvanceBalanceController,
+  getSplitPaymentDetailsController,
+  completeSplitPaymentController,
+} from "../controllers/enhancedPayment.controller";
 
 const router = Router();
 
@@ -106,6 +115,57 @@ router.put(
   RequireCompanyContext(),
   RequirePermissions(["manageTransactions"]),
   TransactionController.updateTransaction
+);
+
+// Enhanced payment routes
+// Cash payment routes
+router.post(
+  "/cash",
+  RequireCompanyContext(),
+  RequirePermissions(["manageTransactions"]),
+  processCashPaymentController
+);
+
+// Split payment routes
+router.post(
+  "/split",
+  RequireCompanyContext(),
+  RequirePermissions(["manageTransactions"]),
+  processSplitPaymentController
+);
+
+router.get(
+  "/split/:splitPaymentId",
+  RequireCompanyContext(),
+  RequirePermissions(["accessFinancials"]),
+  getSplitPaymentDetailsController
+);
+
+router.put(
+  "/split/:splitPaymentId/complete",
+  RequireCompanyContext(),
+  RequirePermissions(["manageTransactions"]),
+  completeSplitPaymentController
+);
+
+// Advance payment routes
+router.post(
+  "/advance",
+  RequireCompanyContext(),
+  processAdvancePaymentController
+);
+
+router.post(
+  "/advance/apply",
+  RequireCompanyContext(),
+  RequirePermissions(["manageTransactions"]),
+  applyAdvancePaymentController
+);
+
+router.get(
+  "/advance/balance",
+  RequireCompanyContext(),
+  getAdvanceBalanceController
 );
 
 export default router;

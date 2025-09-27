@@ -1,6 +1,17 @@
 import { Router } from "express";
 import { SuperAdminController } from "../controllers/superAdmin.controller";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
+import {
+  getSystemStatisticsController,
+  getCompanyAnalyticsController,
+  updateCompanyFeeController,
+  activateCompanySubscriptionController,
+  deactivateCompanySubscriptionController,
+  getSystemTaxManagementController,
+  getSystemNotificationsController,
+  sendSystemNotificationController,
+  getSystemHealthController,
+} from "../controllers/superAdminEnhanced.controller";
 
 const router = Router();
 
@@ -38,5 +49,25 @@ router.get("/statistics", SuperAdminController.getSystemStatistics);
 router.get("/activity", SuperAdminController.getRecentActivity);
 router.get("/search/companies", SuperAdminController.searchCompanies);
 router.get("/search/users", SuperAdminController.searchUsers);
+
+// Enhanced super admin routes
+// System statistics (enhanced)
+router.get("/statistics-enhanced", getSystemStatisticsController);
+
+// Company analytics
+router.get("/company-analytics", getCompanyAnalyticsController);
+
+// Company fee management
+router.put("/company/fee", updateCompanyFeeController);
+
+// Subscription management (enhanced)
+router.post("/company/activate-subscription", activateCompanySubscriptionController);
+router.post("/company/deactivate-subscription", deactivateCompanySubscriptionController);
+
+// System management
+router.get("/tax-management", getSystemTaxManagementController);
+router.get("/notifications", getSystemNotificationsController);
+router.post("/send-notification", sendSystemNotificationController);
+router.get("/health", getSystemHealthController);
 
 export default router;

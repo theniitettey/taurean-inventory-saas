@@ -6,6 +6,15 @@ import {
   RequireActiveCompany,
   RequirePermissions,
 } from "../middlewares/auth.middleware";
+import {
+  getInventoryWithRentalStatusController,
+  getInventoryItemWithRentalHistoryController,
+  rentInventoryItemController,
+  returnInventoryItemController,
+  getInventoryStatisticsController,
+  getLowStockItemsController,
+  getMaintenanceDueItemsController,
+} from "../controllers/enhancedInventory.controller";
 
 const uploadConfig = {
   storage,
@@ -96,6 +105,70 @@ router.post(
   RequireActiveCompany(),
   RequirePermissions(["manageInventory"]),
   InventoryItemController.addMaintenanceSchedule
+);
+
+// Enhanced inventory routes
+// Get inventory with rental status
+router.get(
+  "/with-rental-status",
+  AuthMiddleware,
+  RequireActiveCompany(),
+  RequirePermissions(["manageInventory"]),
+  getInventoryWithRentalStatusController
+);
+
+// Get inventory item with rental history
+router.get(
+  "/:id/rental-history",
+  AuthMiddleware,
+  RequireActiveCompany(),
+  RequirePermissions(["manageInventory"]),
+  getInventoryItemWithRentalHistoryController
+);
+
+// Rent inventory item
+router.post(
+  "/:id/rent",
+  AuthMiddleware,
+  RequireActiveCompany(),
+  RequirePermissions(["manageInventory"]),
+  rentInventoryItemController
+);
+
+// Return inventory item (enhanced)
+router.post(
+  "/:id/return-enhanced",
+  AuthMiddleware,
+  RequireActiveCompany(),
+  RequirePermissions(["manageInventory"]),
+  returnInventoryItemController
+);
+
+// Get inventory statistics
+router.get(
+  "/statistics",
+  AuthMiddleware,
+  RequireActiveCompany(),
+  RequirePermissions(["manageInventory"]),
+  getInventoryStatisticsController
+);
+
+// Get low stock items (enhanced)
+router.get(
+  "/low-stock-enhanced",
+  AuthMiddleware,
+  RequireActiveCompany(),
+  RequirePermissions(["manageInventory"]),
+  getLowStockItemsController
+);
+
+// Get maintenance due items
+router.get(
+  "/maintenance-due",
+  AuthMiddleware,
+  RequireActiveCompany(),
+  RequirePermissions(["manageInventory"]),
+  getMaintenanceDueItemsController
 );
 
 export default router;
