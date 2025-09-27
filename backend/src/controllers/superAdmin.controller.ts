@@ -1,5 +1,16 @@
 import { Request, Response } from "express";
 import { SuperAdminService } from "../services/superAdmin.service";
+import { 
+  getSystemStatistics,
+  getCompanyAnalytics,
+  updateCompanyFee,
+  activateCompanySubscription,
+  deactivateCompanySubscription,
+  getSystemTaxManagement,
+  getSystemNotifications,
+  sendSystemNotification,
+  getSystemHealth,
+} from "../services/superAdminEnhanced.service";
 import { sendError, sendSuccess } from "../utils/response.util";
 
 export class SuperAdminController {
@@ -42,45 +53,6 @@ export class SuperAdminController {
     }
   }
 
-  // Activate company subscription
-  static async activateCompanySubscription(req: Request, res: Response) {
-    try {
-      const { companyId } = req.params;
-      const { plan, duration } = req.body;
-
-      if (!plan || !duration) {
-        sendError(res, "Plan and duration are required", null, 400);
-        return;
-      }
-
-      const company = await SuperAdminService.activateCompanySubscription(
-        companyId,
-        plan,
-        duration
-      );
-
-      sendSuccess(res, "Company subscription activated successfully", {
-        company,
-      });
-    } catch (error: any) {
-      sendError(res, error.message, null, 400);
-    }
-  }
-
-  // Deactivate company subscription
-  static async deactivateCompanySubscription(req: Request, res: Response) {
-    try {
-      const { companyId } = req.params;
-      const company = await SuperAdminService.deactivateCompanySubscription(
-        companyId
-      );
-      sendSuccess(res, "Company subscription deactivated successfully", {
-        company,
-      });
-    } catch (error: any) {
-      sendError(res, error.message, null, 400);
-    }
-  }
 
   // Get all users
   static async getAllUsers(req: Request, res: Response) {
@@ -152,15 +124,6 @@ export class SuperAdminController {
     }
   }
 
-  // Get system statistics
-  static async getSystemStatistics(req: Request, res: Response) {
-    try {
-      const stats = await SuperAdminService.getSystemStatistics();
-      sendSuccess(res, "System statistics retrieved successfully", { stats });
-    } catch (error: any) {
-      sendError(res, error.message, null, 400);
-    }
-  }
 
   // Get recent activity
   static async getRecentActivity(req: Request, res: Response) {
@@ -206,6 +169,150 @@ export class SuperAdminController {
       sendSuccess(res, "Users search completed", { users });
     } catch (error: any) {
       sendError(res, error.message, null, 400);
+    }
+  }
+
+  // Enhanced Super Admin Functions
+
+  /**
+   * Get system statistics
+   */
+  static async getSystemStatistics(req: Request, res: Response) {
+    try {
+      const statistics = await getSystemStatistics();
+      sendSuccess(res, "System statistics fetched successfully", statistics);
+    } catch (error: any) {
+      sendError(res, "Failed to fetch system statistics", error);
+    }
+  }
+
+  /**
+   * Get company analytics
+   */
+  static async getCompanyAnalytics(req: Request, res: Response) {
+    try {
+      const analytics = await getCompanyAnalytics();
+      sendSuccess(res, "Company analytics fetched successfully", analytics);
+    } catch (error: any) {
+      sendError(res, "Failed to fetch company analytics", error);
+    }
+  }
+
+  /**
+   * Update company fee
+   */
+  static async updateCompanyFee(req: Request, res: Response) {
+    try {
+      const { companyId, feePercent } = req.body;
+
+      if (!companyId || feePercent === undefined) {
+        sendError(res, "Company ID and fee percentage are required", null, 400);
+        return;
+      }
+
+      const result = await updateCompanyFee(companyId, feePercent);
+      sendSuccess(res, "Company fee updated successfully", result);
+    } catch (error: any) {
+      sendError(res, "Failed to update company fee", error);
+    }
+  }
+
+  /**
+   * Activate company subscription
+   */
+  static async activateCompanySubscription(req: Request, res: Response) {
+    try {
+      const { companyId, planId, duration } = req.body;
+
+      if (!companyId || !planId) {
+        sendError(res, "Company ID and plan ID are required", null, 400);
+        return;
+      }
+
+      const result = await activateCompanySubscription(companyId, planId);
+      sendSuccess(res, "Company subscription activated successfully", result);
+    } catch (error: any) {
+      sendError(res, "Failed to activate company subscription", error);
+    }
+  }
+
+  /**
+   * Deactivate company subscription
+   */
+  static async deactivateCompanySubscription(req: Request, res: Response) {
+    try {
+      const { companyId } = req.body;
+
+      if (!companyId) {
+        sendError(res, "Company ID is required", null, 400);
+        return;
+      }
+
+      const result = await deactivateCompanySubscription(companyId);
+      sendSuccess(res, "Company subscription deactivated successfully", result);
+    } catch (error: any) {
+      sendError(res, "Failed to deactivate company subscription", error);
+    }
+  }
+
+  /**
+   * Get system tax management
+   */
+  static async getSystemTaxManagement(req: Request, res: Response) {
+    try {
+      const result = await getSystemTaxManagement();
+      sendSuccess(res, "System tax management data fetched successfully", result);
+    } catch (error: any) {
+      sendError(res, "Failed to fetch system tax management data", error);
+    }
+  }
+
+  /**
+   * Get system notifications
+   */
+  static async getSystemNotifications(req: Request, res: Response) {
+    try {
+      const result = await getSystemNotifications();
+      sendSuccess(res, "System notifications fetched successfully", result);
+    } catch (error: any) {
+      sendError(res, "Failed to fetch system notifications", error);
+    }
+  }
+
+  /**
+   * Send system notification
+   */
+  static async sendSystemNotification(req: Request, res: Response) {
+    try {
+      const { title, message, type, targetCompanies, targetUsers } = req.body;
+
+      if (!title || !message || !type) {
+        sendError(res, "Title, message, and type are required", null, 400);
+        return;
+      }
+
+      const result = await sendSystemNotification({
+        title,
+        message,
+        type,
+        category: "announcement" as const,
+      });
+
+      sendSuccess(res, "System notification sent successfully", result);
+    } catch (error: any) {
+      sendError(res, "Failed to send system notification", error);
+    }
+  }
+
+  /**
+   * Get system health
+   */
+  static async getSystemHealth(req: Request, res: Response) {
+    try {
+      const result = await getSystemHealth();
+      sendSuccess(res, "System health data fetched successfully", result);
+    } catch (error: any) {
+      sendError(res, "Failed to fetch system health data", error);
     }
   }
 }

@@ -6,6 +6,15 @@ import {
   BookingService,
   FacilityService,
 } from "../services";
+import { 
+  processCashPayment,
+  processSplitPayment,
+  processAdvancePayment,
+  applyAdvancePayment,
+  getAdvanceBalance,
+  getSplitPaymentDetails,
+  completeSplitPayment
+} from "../services/enhancedPayment.service";
 
 import {
   sendSuccess,
@@ -913,6 +922,218 @@ const getSubAccountDetails = async (
   }
 };
 
+/**
+ * Process cash payment
+ */
+const processCashPaymentController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { amount, denominations, transactionId } = req.body;
+    const userId = req.user?.id;
+    const companyId = req.user?.companyId;
+
+    if (!userId || !companyId) {
+      sendError(res, "User authentication required");
+      return;
+    }
+
+    if (!amount || !denominations || !transactionId) {
+      sendError(res, "Amount, denominations, and transaction ID are required");
+      return;
+    }
+
+    const result = await processCashPayment({
+      amount,
+      denominations,
+      transactionId,
+      userId,
+      companyId,
+    });
+
+    sendSuccess(res, "Cash payment processed successfully", result);
+  } catch (error) {
+    sendError(res, "Failed to process cash payment", error);
+  }
+};
+
+/**
+ * Process split payment
+ */
+const processSplitPaymentController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { totalAmount, installments, dueDates, transactionId } = req.body;
+    const userId = req.user?.id;
+    const companyId = req.user?.companyId;
+
+    if (!userId || !companyId) {
+      sendError(res, "User authentication required");
+      return;
+    }
+
+    if (!totalAmount || !installments || !dueDates || !transactionId) {
+      sendError(res, "Total amount, installments, due dates, and transaction ID are required");
+      return;
+    }
+
+    const splits = installments.map((amount: number, index: number) => ({
+      transactionId,
+      splitType: "fixed" as const,
+      splitAmount: amount,
+      dueDate: new Date(dueDates[index]),
+    }));
+
+    const result = await processSplitPayment({
+      totalAmount,
+      currency: "GHS",
+      splits,
+      userId,
+      companyId,
+    });
+
+    sendSuccess(res, "Split payment created successfully", result);
+  } catch (error) {
+    sendError(res, "Failed to create split payment", error);
+  }
+};
+
+/**
+ * Process advance payment
+ */
+const processAdvancePaymentController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { amount, description, paymentMethod } = req.body;
+    const userId = req.user?.id;
+    const companyId = req.user?.companyId;
+
+    if (!userId || !companyId) {
+      sendError(res, "User authentication required");
+      return;
+    }
+
+    if (!amount) {
+      sendError(res, "Amount is required");
+      return;
+    }
+
+    const result = await processAdvancePayment({
+      amount,
+      currency: "GHS",
+      description,
+      paymentMethod,
+      userId,
+      companyId,
+    });
+
+    sendSuccess(res, "Advance payment recorded successfully", result);
+  } catch (error) {
+    sendError(res, "Failed to record advance payment", error);
+  }
+};
+
+/**
+ * Apply advance payment to transaction
+ */
+const applyAdvancePaymentController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { transactionId, amount } = req.body;
+    const userId = req.user?.id;
+    const companyId = req.user?.companyId;
+
+    if (!userId || !companyId) {
+      sendError(res, "User authentication required");
+      return;
+    }
+
+    if (!transactionId || !amount) {
+      sendError(res, "Transaction ID and amount are required");
+      return;
+    }
+
+    const result = await applyAdvancePayment({
+      transactionId,
+      advanceAmount: amount,
+      userId,
+    });
+
+    sendSuccess(res, "Advance payment applied successfully", result);
+  } catch (error) {
+    sendError(res, "Failed to apply advance payment", error);
+  }
+};
+
+/**
+ * Get advance payment balance
+ */
+const getAdvanceBalanceController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const companyId = req.user?.companyId;
+
+    if (!userId || !companyId) {
+      sendError(res, "User authentication required");
+      return;
+    }
+
+    const result = await getAdvanceBalance(userId);
+    sendSuccess(res, "Advance balance retrieved successfully", result);
+  } catch (error) {
+    sendError(res, "Failed to retrieve advance balance", error);
+  }
+};
+
+/**
+ * Get split payment details
+ */
+const getSplitPaymentDetailsController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { splitPaymentId } = req.params;
+    const userId = req.user?.id;
+    const companyId = req.user?.companyId;
+
+    if (!userId || !companyId) {
+      sendError(res, "User authentication required");
+      return;
+    }
+
+    if (!splitPaymentId) {
+      sendError(res, "Split payment ID is required");
+      return;
+    }
+
+    const result = await getSplitPaymentDetails(splitPaymentId);
+    sendSuccess(res, "Split payment details retrieved successfully", result);
+  } catch (error) {
+    sendError(res, "Failed to retrieve split payment details", error);
+  }
+};
+
+/**
+ * Complete split payment
+ */
+const completeSplitPaymentController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { splitPaymentId } = req.params;
+    const { paymentAmount, paymentMethod } = req.body;
+    const userId = req.user?.id;
+    const companyId = req.user?.companyId;
+
+    if (!userId || !companyId) {
+      sendError(res, "User authentication required");
+      return;
+    }
+
+    if (!splitPaymentId || !paymentAmount) {
+      sendError(res, "Split payment ID and payment amount are required");
+      return;
+    }
+
+    const result = await completeSplitPayment(splitPaymentId);
+
+    sendSuccess(res, "Split payment completed successfully", result);
+  } catch (error) {
+    sendError(res, "Failed to complete split payment", error);
+  }
+};
+
 export {
   initializePaymentController,
   verifyPaymentController,
@@ -926,4 +1147,11 @@ export {
   updateSubAccount,
   listBanks,
   getSubAccountDetails,
+  processCashPaymentController,
+  processSplitPaymentController,
+  processAdvancePaymentController,
+  applyAdvancePaymentController,
+  getAdvanceBalanceController,
+  getSplitPaymentDetailsController,
+  completeSplitPaymentController,
 };

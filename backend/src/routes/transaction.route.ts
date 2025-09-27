@@ -15,7 +15,7 @@ import {
   getAdvanceBalanceController,
   getSplitPaymentDetailsController,
   completeSplitPaymentController,
-} from "../controllers/enhancedPayment.controller";
+} from "../controllers/transaction.controller";
 
 const router = Router();
 

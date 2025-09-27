@@ -16,7 +16,7 @@ import {
   createRentalNotificationController,
   createPaymentNotificationController,
   createSubscriptionNotificationController,
-} from "../controllers/enhancedNotification.controller";
+} from "../controllers/notification.controller";
 
 const router = Router();
 

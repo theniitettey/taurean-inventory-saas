@@ -14,7 +14,7 @@ import {
   getInventoryStatisticsController,
   getLowStockItemsController,
   getMaintenanceDueItemsController,
-} from "../controllers/enhancedInventory.controller";
+} from "../controllers/inventoryItem.controller";
 
 const uploadConfig = {
   storage,

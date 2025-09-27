@@ -1,17 +1,6 @@
 import { Router } from "express";
 import { SuperAdminController } from "../controllers/superAdmin.controller";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
-import {
-  getSystemStatisticsController,
-  getCompanyAnalyticsController,
-  updateCompanyFeeController,
-  activateCompanySubscriptionController,
-  deactivateCompanySubscriptionController,
-  getSystemTaxManagementController,
-  getSystemNotificationsController,
-  sendSystemNotificationController,
-  getSystemHealthController,
-} from "../controllers/superAdminEnhanced.controller";
 
 const router = Router();
 
@@ -52,22 +41,22 @@ router.get("/search/users", SuperAdminController.searchUsers);
 
 // Enhanced super admin routes
 // System statistics (enhanced)
-router.get("/statistics-enhanced", getSystemStatisticsController);
+router.get("/statistics-enhanced", SuperAdminController.getSystemStatistics);
 
 // Company analytics
-router.get("/company-analytics", getCompanyAnalyticsController);
+router.get("/company-analytics", SuperAdminController.getCompanyAnalytics);
 
 // Company fee management
-router.put("/company/fee", updateCompanyFeeController);
+router.put("/company/fee", SuperAdminController.updateCompanyFee);
 
 // Subscription management (enhanced)
-router.post("/company/activate-subscription", activateCompanySubscriptionController);
-router.post("/company/deactivate-subscription", deactivateCompanySubscriptionController);
+router.post("/company/activate-subscription", SuperAdminController.activateCompanySubscription);
+router.post("/company/deactivate-subscription", SuperAdminController.deactivateCompanySubscription);
 
 // System management
-router.get("/tax-management", getSystemTaxManagementController);
-router.get("/notifications", getSystemNotificationsController);
-router.post("/send-notification", sendSystemNotificationController);
-router.get("/health", getSystemHealthController);
+router.get("/tax-management", SuperAdminController.getSystemTaxManagement);
+router.get("/notifications", SuperAdminController.getSystemNotifications);
+router.post("/send-notification", SuperAdminController.sendSystemNotification);
+router.get("/health", SuperAdminController.getSystemHealth);
 
 export default router;
